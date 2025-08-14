@@ -5,4 +5,4 @@ class CoursesConfig(AppConfig):
     name = "courses"
 
     def ready(self):
-        from . import signals  # noqa
+        from . import signals  # type: ignore  # noqa

@@ -1,7 +1,6 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.db import transaction
-
 from .models import Enrollment, Material
 from social.models import Notification
 
@@ -27,11 +26,10 @@ def notify_students_on_new_material(sender, instance: Material, created, **kwarg
     if not created:
         return
     course = instance.course
-    usernames = []
     def _bulk():
         to_create = []
-        for enr in course.enrollments.filter(status="active").select_related("student"):
-            usernames.append(enr.student.username)
+        qs = course.enrollments.filter(status="active").select_related("student")  # type: ignore
+        for enr in qs:
             to_create.append(Notification(
                 recipient=enr.student,
                 type=Notification.Type.NEW_MATERIAL,
@@ -39,9 +37,10 @@ def notify_students_on_new_material(sender, instance: Material, created, **kwarg
                     "course": course.title,
                     "course_slug": course.slug,
                     "material_title": instance.title,
-                    "material_id": instance.id,
+                    "material_id": instance.id,  # type: ignore
                 },
             ))
         if to_create:
             Notification.objects.bulk_create(to_create)
     transaction.on_commit(_bulk)
+
