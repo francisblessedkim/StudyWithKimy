@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Courses · StudyWithKimy{% endblock %}
+{% block content %}
+<h2>Courses</h2>
+<ul>
+  {% for c in courses %}
+    <li>
+      <a href="/courses/{{ c.slug }}/">{{ c.title }}</a>
+      <small>by {{ c.teacher.username }}</small>
+    </li>
+  {% empty %}<li>No courses yet.</li>{% endfor %}
+</ul>
+{% endblock %}

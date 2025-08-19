@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · StudyWithKimy{% endblock %}
+{% block content %}
+<h2>Dashboard</h2>
+
+<section>
+  <h3>Notifications</h3>
+  <ul>
+    {% for n in notifications %}
+      <li><small>{{ n.created_at|date:"Y-m-d H:i" }}</small> — {{ n.type }} — {{ n.payload.course }} {{ n.payload.material_title }}</li>
+    {% empty %}<li>All caught up!</li>{% endfor %}
+  </ul>
+  <form action="/api/notifications/mark_all_read/" method="post">
+    {% csrf_token %}
+    <button type="submit" formaction="/api/notifications/mark_all_read/">Mark all read</button>
+  </form>
+</section>
+
+{% if user.role == "teacher" %}
+<section>
+  <h3>Your Courses (Teacher)</h3>
+  <ul>
+    {% for c in my_courses_taught %}
+      <li><a href="/courses/{{ c.slug }}/">{{ c.title }}</a></li>
+    {% empty %}<li>You haven’t created any courses yet.</li>{% endfor %}
+  </ul>
+</section>
+<section>
+  <h3>Recently Uploaded Materials</h3>
+  <ul>
+    {% for m in my_materials %}
+      <li>{{ m.title }} — <a href="{{ m.file.url }}">download</a></li>
+    {% empty %}<li>No materials yet.</li>{% endfor %}
+  </ul>
+</section>
+{% else %}
+<section>
+  <h3>Your Enrollments</h3>
+  <ul>
+    {% for e in my_enrollments %}
+      <li><a href="/courses/{{ e.course.slug }}/">{{ e.course.title }}</a></li>
+    {% empty %}<li>Not enrolled in any course yet.</li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endblock %}

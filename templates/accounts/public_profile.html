@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}{{ profile.display_name|default:profile.username }} · StudyWithKimy{% endblock %}
+{% block content %}
+<h2>{{ profile.display_name|default:profile.username }}</h2>
+<p>{{ profile.bio|default:"No bio yet." }}</p>
+
+<h3>Enrolled Courses</h3>
+<ul>
+  {% for t in enrolled_titles %}
+    <li>{{ t }}</li>
+  {% empty %}<li>No enrollments yet.</li>{% endfor %}
+</ul>
+
+<h3>Status Updates</h3>
+<ul>
+  {% for s in statuses %}
+    <li><small>{{ s.created_at|date:"Y-m-d H:i" }}</small> — {{ s.text }}</li>
+  {% empty %}<li>No updates yet.</li>{% endfor %}
+</ul>
+{% endblock %}

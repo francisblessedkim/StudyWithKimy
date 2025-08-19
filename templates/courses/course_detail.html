@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}{{ course.title }} · StudyWithKimy{% endblock %}
+{% block content %}
+<h2>{{ course.title }}</h2>
+<p><em>by {{ course.teacher.username }}</em></p>
+<p>{{ course.description|linebreaks }}</p>
+
+{% if can_enroll %}
+<form method="post" action="/courses/{{ course.slug }}/enroll/">
+  {% csrf_token %}
+  <button type="submit">Enroll</button>
+</form>
+{% elif is_enrolled %}
+<p><strong>You are enrolled in this course.</strong></p>
+{% endif %}
+
+<h3>Materials</h3>
+<ul>
+  {% for m in materials %}
+    <li><a href="{{ m.file.url }}">{{ m.title }}</a> <small>({{ m.created_at|date:"Y-m-d H:i" }})</small></li>
+  {% empty %}<li>No materials yet.</li>{% endfor %}
+</ul>
+{% endblock %}
