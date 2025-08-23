@@ -20,6 +20,20 @@ def public_profile(request, username):
         "enrolled_titles": enrolled_titles,
     })
 
+# @login_required
+# def dashboard(request):
+#     me = request.user
+#     my_courses_taught = Course.objects.filter(teacher=me) if getattr(me, "role", None) == "teacher" else []
+#     my_enrollments = Enrollment.objects.select_related("course").filter(student=me, status="active")
+#     my_materials = Material.objects.filter(course__teacher=me)[:10] if getattr(me, "role", None) == "teacher" else []
+#     notifications = Notification.objects.filter(recipient=me, is_read=False)[:10]
+#     return render(request, "accounts/dashboard.html", {
+#         "my_courses_taught": my_courses_taught,
+#         "my_enrollments": my_enrollments,
+#         "my_materials": my_materials,
+#         "notifications": notifications,
+#     })
+
 @login_required
 def dashboard(request):
     me = request.user
@@ -27,9 +41,14 @@ def dashboard(request):
     my_enrollments = Enrollment.objects.select_related("course").filter(student=me, status="active")
     my_materials = Material.objects.filter(course__teacher=me)[:10] if getattr(me, "role", None) == "teacher" else []
     notifications = Notification.objects.filter(recipient=me, is_read=False)[:10]
+    
+    # Add this line to get all users except the current one
+    users = User.objects.exclude(id=me.id)
+
     return render(request, "accounts/dashboard.html", {
         "my_courses_taught": my_courses_taught,
         "my_enrollments": my_enrollments,
         "my_materials": my_materials,
         "notifications": notifications,
+        "users": users,  # 👈 Pass to template
     })

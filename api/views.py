@@ -8,7 +8,9 @@ from typing import cast
 from rest_framework.parsers import MultiPartParser, FormParser
 from drf_spectacular.utils import extend_schema_view, extend_schema
 from typing import cast
-
+from courses.models import Course
+from api.serializers import CourseSerializer
+from api.permissions import IsTeacher
 
 
 
@@ -38,9 +40,27 @@ class PublicUserViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.IsAuthenticated]  # profiles are visible to logged-in users
 
 # ----- Courses -----
+# class CourseViewSet(viewsets.ModelViewSet):
+#     queryset = Course.objects.select_related("teacher").all()
+#     serializer_class = CourseSerializer
+
+#     def get_permissions(self):
+#         if self.action in ["create", "update", "partial_update", "destroy"]:
+#             return [IsTeacher()]
+#         return [permissions.IsAuthenticated()]
+
+#     def perform_create(self, serializer):
+#         # Teacher creating their own course
+#         serializer.save(teacher=self.request.user)
+
 class CourseViewSet(viewsets.ModelViewSet):
-    queryset = Course.objects.select_related("teacher").all()
     serializer_class = CourseSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        if getattr(user, "role", None) == "teacher":
+            return Course.objects.filter(teacher=user).order_by("id")
+        return Course.objects.none()  # block access for students/others if needed
 
     def get_permissions(self):
         if self.action in ["create", "update", "partial_update", "destroy"]:
@@ -48,7 +68,7 @@ class CourseViewSet(viewsets.ModelViewSet):
         return [permissions.IsAuthenticated()]
 
     def perform_create(self, serializer):
-        # Teacher creating their own course
+        # Automatically assign the authenticated teacher as the course creator
         serializer.save(teacher=self.request.user)
 
 # ----- Enrollments -----
@@ -70,32 +90,6 @@ class EnrollmentViewSet(mixins.CreateModelMixin,
         serializer.save(student=self.request.user, status=Enrollment.Status.ACTIVE)
 
 # ----- Materials -----
-# class MaterialViewSet(mixins.CreateModelMixin,
-#                       mixins.ListModelMixin,
-#                       mixins.DestroyModelMixin,
-#                       viewsets.GenericViewSet):
-#     serializer_class = MaterialSerializer
-#     permission_classes = [permissions.IsAuthenticated]
-#     parser_classes = [MultiPartParser, FormParser]  # <-- add this line
-
-#     def get_queryset(self):
-#         qs = Material.objects.select_related("course", "course__teacher")
-#         user = self.request.user
-#         if getattr(user, "role", None) == "teacher":
-#             return qs.filter(course__teacher=user)
-#         return qs.filter(course__enrollments__student=user, course__enrollments__status="active")
-
-#     def get_permissions(self):
-#         if self.action in ["create", "destroy"]:
-#             return [IsTeacher()]
-#         return super().get_permissions()
-
-#     @extend_schema(
-#         request={"multipart/form-data": MaterialSerializer},   # <-- force file upload UI
-#         responses=MaterialSerializer,
-# )
-#     def create(self, request, *args, **kwargs):
-#         return super().create(request, *args, **kwargs)
 
 @extend_schema_view(
     create=extend_schema(

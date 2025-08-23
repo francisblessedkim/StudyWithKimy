@@ -11,5 +11,7 @@ class User(AbstractUser):
     bio = models.TextField(blank=True)
     photo = models.ImageField(upload_to="avatars/", blank=True, null=True)
 
+    # def __str__(self):
+    #     return self.username
     def __str__(self):
-        return self.username
+        return self.display_name or self.username

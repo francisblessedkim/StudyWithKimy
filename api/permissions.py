@@ -1,8 +1,14 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
+# class IsAuthenticatedReadOnly(BasePermission):
+#     def has_permission(self, request, view):
+#         return request.user.is_authenticated
 class IsAuthenticatedReadOnly(BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_authenticated
+        return (
+            request.method in SAFE_METHODS and
+            request.user and request.user.is_authenticated
+        )
 
 class IsTeacher(BasePermission):
     def has_permission(self, request, view):

@@ -77,22 +77,6 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'config.urls'
 
-# TEMPLATES = [
-#     {
-#         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-#         'DIRS': [],
-#         'APP_DIRS': True,
-#         'OPTIONS': {
-#             'context_processors': [
-#                 'django.template.context_processors.debug',
-#                 'django.template.context_processors.request',
-#                 'django.contrib.auth.context_processors.auth',
-#                 'django.contrib.messages.context_processors.messages',
-#             ],
-#         },
-#     },
-# ]
-
 WSGI_APPLICATION = 'config.wsgi.application'
 
 
@@ -201,9 +185,18 @@ if REDIS_URL:
         }
     }
 else:
+    # CHANNEL_LAYERS = {
+    #     "default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}
+    # }
+
     CHANNEL_LAYERS = {
-        "default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}
-    }
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
+}
 
 #Login 
 LOGIN_URL = "/admin/login/"

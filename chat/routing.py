@@ -1,5 +1,6 @@
-from django.urls import path
+from django.urls import re_path
+from . import consumers  # type: ignore
 
 websocket_urlpatterns = [
-    # e.g. path("ws/chat/course/<slug:slug>/", YourConsumer.as_asgi()),
+    re_path(r"ws/chat/(?P<username>\w+)/$", consumers.ChatConsumer.as_asgi()),
 ]
