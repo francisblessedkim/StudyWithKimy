@@ -1,23 +1,163 @@
 {% extends "base.html" %}
 {% block title %}{{ course.title }} · StudyWithKimy{% endblock %}
 {% block content %}
-<h2>{{ course.title }}</h2>
-<p><em>by {{ course.teacher.username }}</em></p>
-<p>{{ course.description|linebreaks }}</p>
 
-{% if can_enroll %}
-<form method="post" action="/courses/{{ course.slug }}/enroll/">
-  {% csrf_token %}
-  <button type="submit">Enroll</button>
-</form>
-{% elif is_enrolled %}
-<p><strong>You are enrolled in this course.</strong></p>
-{% endif %}
+<!-- Hero -->
+<section class="mb-8">
+  <div class="flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">{{ course.title }}</h1>
+      {% if course.teacher %}
+        <p class="mt-1 text-slate-600 text-sm">by <span class="font-medium">{{ course.teacher.get_full_name|default:course.teacher.username }}</span></p>
+      {% endif %}
+      {% if course.category %}
+        <div class="mt-2"><span class="tag">{{ course.category }}</span></div>
+      {% endif %}
+    </div>
 
-<h3>Materials</h3>
-<ul>
-  {% for m in materials %}
-    <li><a href="{{ m.file.url }}">{{ m.title }}</a> <small>({{ m.created_at|date:"Y-m-d H:i" }})</small></li>
-  {% empty %}<li>No materials yet.</li>{% endfor %}
-</ul>
+    <div class="flex items-center gap-2">
+      {% if user.is_authenticated and user.role == 'student' %}
+        {% if enrolled %}
+          <form method="post" action="/courses/{{ course.slug }}/unenrol/">
+            {% csrf_token %}
+            <button class="btn-ghost" type="submit">Unenrol</button>
+          </form>
+          <a href="#materials" class="btn-primary">Continue</a>
+        {% else %}
+          <form method="post" action="/courses/{{ course.slug }}/enrol/">
+            {% csrf_token %}
+            <button class="btn-primary" type="submit">Enrol</button>
+          </form>
+        {% endif %}
+      {% elif user.is_authenticated and user.role == 'teacher' and course.teacher == user %}
+        <a href="/courses/{{ course.slug }}/materials/add/" class="btn-primary">Add material</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <p class="mt-4 text-slate-700 max-w-3xl">{{ course.description }}</p>
+</section>
+
+<!-- Tabs -->
+<section class="card">
+  <div class="p-2 border-b border-slate-200">
+    <div class="tabs" role="tablist">
+      <button class="tab tab-active" data-tab="overview" role="tab">Overview</button>
+      <button class="tab" data-tab="materials" role="tab">Materials</button>
+      <button class="tab" data-tab="feedback" role="tab">Feedback</button>
+      {% if user.is_authenticated and user.role == 'teacher' and course.teacher == user %}
+        <button class="tab" data-tab="students" role="tab">Students</button>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Panels -->
+  <div class="p-5 space-y-6">
+    <!-- Overview -->
+    <div data-panel="overview">
+      <h2 class="font-semibold">About this course</h2>
+      <p class="mt-2 text-slate-700">{{ course.long_description|default:course.description }}</p>
+    </div>
+
+    <!-- Materials -->
+    <div class="hidden" data-panel="materials" id="materials">
+      <div class="flex items-center justify-between">
+        <h2 class="font-semibold">Course materials</h2>
+        {% if user.is_authenticated and user.role == 'teacher' and course.teacher == user %}
+          <a class="btn-ghost" href="/courses/{{ course.slug }}/materials/add/">Upload</a>
+        {% endif %}
+      </div>
+      <ul class="mt-3 divide-y divide-slate-200">
+        {% for m in materials %}
+          <li class="py-3 flex items-center justify-between">
+            <div>
+              <p class="font-medium">{{ m.title|default:m.file.name }}</p>
+              <p class="text-xs text-slate-500">{{ m.created_at|date:"M d, Y H:i" }}</p>
+            </div>
+            <a class="text-blue-700 hover:underline" href="{{ m.file.url }}">Download</a>
+          </li>
+        {% empty %}
+          <li class="py-3 text-slate-600">No materials yet.</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <!-- Feedback -->
+    <div class="hidden" data-panel="feedback">
+      <div class="grid gap-6 lg:grid-cols-[1fr_340px]">
+        <!-- List -->
+        <div>
+          <h2 class="font-semibold">Student feedback</h2>
+          <ul class="mt-3 space-y-3">
+            {% for f in feedback_list %}
+              <li class="card p-4">
+                <div class="flex items-center justify-between">
+                  <p class="font-medium">@{{ f.student.username }}</p>
+                  <span class="tag">★ {{ f.rating }}</span>
+                </div>
+                <p class="mt-2 text-slate-700">{{ f.comment }}</p>
+                <p class="mt-2 text-xs text-slate-500">{{ f.created_at|date:"M d, Y H:i" }}</p>
+              </li>
+            {% empty %}
+              <li class="text-slate-600">No feedback yet.</li>
+            {% endfor %}
+          </ul>
+        </div>
+
+        <!-- Form (students only, if enrolled) -->
+        {% if user.is_authenticated and user.role == 'student' and enrolled %}
+          <form method="post" action="/courses/{{ course.slug }}/feedback/" class="card p-4">
+            {% csrf_token %}
+            <h3 class="font-semibold">Leave feedback</h3>
+            <label class="block mt-3 text-sm">Rating</label>
+            <select name="rating" class="input">
+              <option value="5">5 - Excellent</option>
+              <option value="4">4 - Good</option>
+              <option value="3">3 - Fair</option>
+              <option value="2">2 - Poor</option>
+              <option value="1">1 - Terrible</option>
+            </select>
+            <label class="block mt-3 text-sm">Comment</label>
+            <textarea name="comment" rows="4" class="input"></textarea>
+            <button class="btn-primary mt-4" type="submit">Submit</button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Students (teacher view) -->
+    {% if user.is_authenticated and user.role == 'teacher' and course.teacher == user %}
+      <div class="hidden" data-panel="students">
+        <h2 class="font-semibold">Enrolled students</h2>
+        <ul class="mt-3 divide-y divide-slate-200">
+          {% for e in enrollments %}
+            <li class="py-3 flex items-center justify-between">
+              <span>@{{ e.student.username }}</span>
+              <!-- Optional: block/unenrol actions -->
+              <form method="post" action="/courses/{{ course.slug }}/unenrol/{{ e.student.username }}/">
+                {% csrf_token %}
+                <button class="btn-ghost" type="submit">Remove</button>
+              </form>
+            </li>
+          {% empty %}
+            <li class="py-3 text-slate-600">No students enrolled yet.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<script>
+  // Simple tab switcher
+  const tabs = [...document.querySelectorAll('[data-tab]')];
+  const panels = [...document.querySelectorAll('[data-panel]')];
+  function show(tabKey){
+    tabs.forEach(t => t.classList.toggle('tab-active', t.dataset.tab === tabKey));
+    panels.forEach(p => p.classList.toggle('hidden', p.dataset.panel !== tabKey));
+  }
+  tabs.forEach(t => t.addEventListener('click', () => show(t.dataset.tab)));
+  // default open is 'overview'
+  show('overview');
+</script>
 {% endblock %}

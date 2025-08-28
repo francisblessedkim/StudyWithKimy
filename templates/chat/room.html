@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Chat · {{ recipient.username }} · StudyWithKimy{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-4xl space-y-5">
+  <div class="flex items-center justify-between">
+    <h1 class="text-xl sm:text-2xl font-semibold">Chat with <span class="text-gradient">@{{ recipient.username }}</span></h1>
+    <a href="/dashboard/" class="btn-ghost">Back to dashboard</a>
+  </div>
+
+  <section class="card overflow-hidden">
+    <div class="px-4 py-3 border-b border-slate-200 flex items-center gap-2">
+      <span id="wsDot" class="status-dot status-offline"></span>
+      <span id="wsLabel" class="text-sm text-slate-600">Connecting…</span>
+    </div>
+
+    <div class="h-[70vh] flex flex-col">
+      <div id="messages" class="flex-1 overflow-y-auto p-4 bg-slate-50 space-y-2"></div>
+
+      <!-- Composer: grid fixes button stretching -->
+      <form id="chatForm" class="border-t border-slate-200 p-3 grid grid-cols-[1fr_auto] items-center gap-2">
+        <textarea id="messageInput" rows="1" class="input min-h-[42px] max-h-40 resize-y" placeholder="Type a message…" autocomplete="off"></textarea>
+        <button class="btn-primary px-5 h-input place-self-end" type="submit">Send</button>
+      </form>
+    </div>
+  </section>
+</div>
+
+<script>
+  const otherUser = "{{ recipient.username }}";
+  const historyUrl = "{% url 'chat:chat_history' recipient.username %}";
+  const scheme = location.protocol === "https:" ? "wss" : "ws";
+  const wsBase = "{{ ws_base|default:'/ws/chat/' }}";
+  const wsUrl = `${scheme}://${location.host}${wsBase}${otherUser}/`;
+
+  const messagesEl = document.getElementById("messages");
+  const form = document.getElementById("chatForm");
+  const input = document.getElementById("messageInput");
+  const wsDot = document.getElementById("wsDot");
+  const wsLabel = document.getElementById("wsLabel");
+
+  function scrollToBottom(){ messagesEl.scrollTop = messagesEl.scrollHeight; }
+  function fmt(t){ try{ return new Date(t).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});}catch{return ''} }
+  function appendMsg(sender, text, ts){
+    const mine = sender.toLowerCase() === "{{ request.user.username|lower }}";
+    const el = document.createElement("div");
+    el.className = mine ? "chat-mine" : "chat-theirs";
+    el.innerHTML = `<div>${text.replace(/</g,"&lt;")}</div>
+                    <div class="mt-1 text-[11px] opacity-70 ${mine?'text-white':'text-slate-500'} text-right">${fmt(ts)}</div>`;
+    messagesEl.appendChild(el);
+  }
+
+  // Load history
+  fetch(historyUrl).then(r => r.json()).then(d => {
+    (d.messages||[]).forEach(m => appendMsg(m.sender, m.message, m.timestamp));
+    scrollToBottom();
+  }).catch(()=>{});
+
+  // WebSocket
+  const socket = new WebSocket(wsUrl);
+  socket.onopen = () => { wsDot.className = "status-dot status-online"; wsLabel.textContent = "Connected"; };
+  socket.onclose = () => { wsDot.className = "status-dot status-offline"; wsLabel.textContent = "Disconnected"; };
+  socket.onerror = () => { wsDot.className = "status-dot status-offline"; wsLabel.textContent = "Error"; };
+  socket.onmessage = (e) => {
+    try {
+      const data = JSON.parse(e.data);
+      appendMsg(data.sender || "system", data.message || String(e.data), data.timestamp || Date.now());
+    } catch { appendMsg("system", String(e.data), Date.now()); }
+    scrollToBottom();
+  };
+
+  // Enter to send, Shift+Enter newline
+  input.addEventListener("keydown", (e)=>{ if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); form.requestSubmit(); }});
+  form.addEventListener("submit", (e)=>{
+    e.preventDefault();
+    const msg = input.value.trim();
+    if(!msg || socket.readyState !== 1) return;
+    socket.send(JSON.stringify({ message: msg }));
+    input.value = "";
+  });
+</script>
+{% endblock %}

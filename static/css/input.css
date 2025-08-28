@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .card { @apply rounded-2xl border border-slate-200 bg-white shadow-sm; }
+  .btn  { @apply inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-200; }
+  .btn-primary { @apply btn text-white bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 hover:opacity-90; }
+  .btn-ghost   { @apply btn text-slate-700 hover:bg-slate-100; }
+  .input       { @apply w-full rounded-xl border border-slate-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none; }
+}
+
+@layer utilities {
+  .text-gradient { @apply bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 bg-clip-text text-transparent; }
+  .h-input { @apply h-[42px]; }
+}
+
+/* Django messages (optional, tweak as you like) */
+@layer components {
+  .alert { @apply rounded-xl px-4 py-3 text-sm font-medium; }
+  .alert.success { @apply bg-green-50 text-green-700 border border-green-200; }
+  .alert.info    { @apply bg-blue-50 text-blue-700 border border-blue-200; }
+  .alert.warning { @apply bg-yellow-50 text-yellow-800 border border-yellow-200; }
+  .alert.error   { @apply bg-rose-50 text-rose-700 border border-rose-200; }
+}
+
+@layer components {
+  .chat-bubble     { @apply max-w-[75%] rounded-2xl px-3 py-2 text-sm; }
+  .chat-mine       { @apply chat-bubble ml-auto text-white bg-gradient-to-br from-blue-600 to-indigo-600; }
+  .chat-theirs     { @apply chat-bubble bg-white border border-slate-200; }
+  .status-dot      { @apply inline-block h-2.5 w-2.5 rounded-full; }
+  .status-online   { @apply bg-green-500; }
+  .status-offline  { @apply bg-rose-500; }
+}
+
+@layer components {
+  .tag { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-slate-100 text-slate-700; }
+  .pill { @apply inline-flex items-center rounded-xl px-3 py-1 text-xs font-semibold bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 text-white; }
+}
+
+@layer utilities {
+  .tabs { @apply flex gap-1 p-1 rounded-xl bg-slate-100; }
+  .tab  { @apply px-3 py-1.5 text-sm font-medium rounded-lg text-slate-600 hover:text-slate-900; }
+  .tab-active { @apply bg-white text-slate-900 shadow-sm; }
+}

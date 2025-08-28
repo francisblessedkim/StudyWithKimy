@@ -8,6 +8,7 @@ User = settings.AUTH_USER_MODEL
 class Course(models.Model):
     title = models.CharField(max_length=200)
     slug = models.SlugField(unique=True, blank=True)
+    thumbnail = models.ImageField(upload_to="course_thumbs/%Y/%m/%d", blank=True, null=True)
     description = models.TextField(blank=True)
     teacher = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="courses",

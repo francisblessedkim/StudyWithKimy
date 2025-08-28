@@ -18,6 +18,7 @@ class Notification(models.Model):
     class Type(models.TextChoices):
         ENROLMENT = "enrolment", "New enrolment"
         NEW_MATERIAL = "new_material", "New material"
+        REMOVED = "removed", "Removed from course"
 
     recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name="notifications")
     type = models.CharField(max_length=20, choices=Type.choices)

@@ -1,34 +1,111 @@
+{% load static %}
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <title>{% block title %}StudyWithKimy{% endblock %}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
-  {% load static %}
+  <link href="{% static 'css/output.css' %}" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    html{scroll-behavior:smooth}
+    body{font-family:Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial}
+  </style>
 </head>
-<body>
-  <header>
-    <h1><a href="/">StudyWithKimy</a></h1>
-    <nav>
-      <a href="/courses/">Courses</a>
-      {% if user.is_authenticated %}
-        <a href="/dashboard/">Dashboard</a>
-        <a href="/api/docs/" target="_blank">API Docs</a>
-        <span>Hi, {{ user.username }}</span>
-        <a href="/admin/logout/">Logout</a>
-      {% else %}
-        <a href="/admin/login/?next=/">Login</a>
-      {% endif %}
-    </nav>
+<body class="min-h-screen bg-gradient-to-b from-[#f7fbff] via-white to-white text-slate-800">
+  <!-- Top Nav -->
+  <header class="sticky top-0 z-40 bg-white/70 border-b border-slate-200 backdrop-blur">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-3 group">
+        <span class="h-8 w-8 rounded-xl bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 shadow-md"></span>
+        <span class="text-lg font-semibold tracking-tight group-hover:opacity-90">StudyWithKimy</span>
+      </a>
+
+      <nav class="hidden md:flex items-center gap-6">
+        <!-- <a class="text-sm font-medium hover:text-blue-700" href="/courses/">Courses</a> -->
+         <a class="text-sm font-medium hover:text-blue-700" href="{% url 'course_list' %}">Courses</a>
+        {% if user.is_authenticated and user.role == 'teacher' %}
+          <a class="text-sm font-medium hover:text-blue-700" href="{% url 'course_add' %}">
+            Create course
+          </a>
+        {% endif %}
+
+        {% if user.is_authenticated %}
+          <a class="text-sm font-medium hover:text-blue-700" href="{% url 'dashboard' %}">Dashboard</a>
+          <a class="text-sm font-medium hover:text-blue-700" href="/api/docs/" target="_blank">API Docs</a>
+          <span class="text-sm text-slate-600">Hi, <strong>{{ user.username }}</strong></span>
+          <form action="{% url 'logout' %}" method="post" class="inline">
+            {% csrf_token %}
+            <button type="submit" class="btn-ghost">Logout</button>
+          </form>
+        {% else %}
+          <a class="text-sm font-medium hover:text-blue-700" href="{% url 'login' %}">Login</a>
+          <a class="btn-primary" href="{% url 'signup' %}">Sign up</a>
+        {% endif %}
+      </nav>
+
+      <!-- Mobile menu button -->
+      <button id="menuBtn" class="md:hidden inline-flex items-center p-2 rounded-xl hover:bg-slate-100" aria-label="Open menu">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Mobile menu -->
+    <div id="mobileMenu" class="md:hidden hidden border-t border-slate-200">
+      <div class="px-4 py-3 space-y-2">
+        <!-- <a class="block text-sm font-medium hover:text-blue-700" href="/courses/">Courses</a> -->
+         <a class="text-sm font-medium hover:text-blue-700" href="{% url 'course_list' %}">Courses</a>
+        {% if user.is_authenticated and user.role == 'teacher' %}
+          <a class="block text-sm font-medium hover:text-blue-700" href="{% url 'course_add' %}">
+            Create course
+          </a>
+        {% endif %}
+        {% if user.is_authenticated %}
+      <a class="block text-sm font-medium hover:text-blue-700" href="{% url 'dashboard' %}">Dashboard</a>
+      <a class="block text-sm font-medium hover:text-blue-700" href="/api/docs/" target="_blank">API Docs</a>
+      <form action="{% url 'logout' %}" method="post" class="mt-1">
+        {% csrf_token %}
+            <button type="submit" class="block w-full text-left text-sm font-medium btn-ghost">Logout</button>
+          </form>
+        {% else %}
+          <a class="block text-sm font-medium hover:text-blue-700" href="{% url 'login' %}">Login</a>
+          <a class="block btn-primary mt-1" href="{% url 'signup' %}">Sign up</a>
+        {% endif %}
+
+      </div>
+    </div>
   </header>
 
-  <main>
+  <!-- Messages -->
+  <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 mt-4 space-y-3">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert {{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  </div>
+
+  <!-- Main -->
+  <main class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
     {% block content %}{% endblock %}
   </main>
 
-  <footer>
-    <small>© {{ now|date:"Y" }} StudyWithKimy</small>
+  <!-- Footer -->
+  <footer class="border-t border-slate-200">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 text-sm text-slate-500">
+      © {% now "Y" %} StudyWithKimy. All rights reserved.
+    </div>
   </footer>
+
+  <script>
+    const btn = document.getElementById('menuBtn');
+    const menu = document.getElementById('mobileMenu');
+    if (btn && menu) btn.addEventListener('click', () => menu.classList.toggle('hidden'));
+  </script>
 </body>
 </html>
+

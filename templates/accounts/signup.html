@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Sign up · StudyWithKimy{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-md">
+  <div class="card p-6">
+    <h1 class="text-2xl font-semibold">Create your account</h1>
+    <p class="text-slate-600 mt-1">Join as a student or teacher.</p>
+
+    <form method="post" enctype="multipart/form-data" class="mt-6 space-y-4">
+      {% csrf_token %}
+      <!-- Render fields manually for full control -->
+      <div class="grid gap-4">
+        <div>
+          <label class="text-sm text-slate-700">Username</label>
+          {{ form.username }}
+          {% for e in form.username.errors %}<p class="text-rose-600 text-sm mt-1">{{ e }}</p>{% endfor %}
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="text-sm text-slate-700">First name</label>
+            {{ form.first_name }}
+            {% for e in form.first_name.errors %}<p class="text-rose-600 text-sm mt-1">{{ e }}</p>{% endfor %}
+          </div>
+          <div>
+            <label class="text-sm text-slate-700">Last name</label>
+            {{ form.last_name }}
+            {% for e in form.last_name.errors %}<p class="text-rose-600 text-sm mt-1">{{ e }}</p>{% endfor %}
+          </div>
+        </div>
+
+        <div>
+          <label class="text-sm text-slate-700">Email</label>
+          {{ form.email }}
+          {% for e in form.email.errors %}<p class="text-rose-600 text-sm mt-1">{{ e }}</p>{% endfor %}
+        </div>
+
+        <div>
+          <label class="text-sm text-slate-700">Role</label>
+          <div class="relative">
+            {{ form.role }}
+          </div>
+          {% for e in form.role.errors %}<p class="text-rose-600 text-sm mt-1">{{ e }}</p>{% endfor %}
+        </div>
+
+        {% if form.photo %}
+        <div>
+          <label class="text-sm text-slate-700">Photo (optional)</label>
+          {{ form.photo }}
+          {% for e in form.photo.errors %}<p class="text-rose-600 text-sm mt-1">{{ e }}</p>{% endfor %}
+        </div>
+        {% endif %}
+
+        <div>
+          <label class="text-sm text-slate-700">Password</label>
+          {{ form.password1 }}
+          {% for e in form.password1.errors %}<p class="text-rose-600 text-sm mt-1">{{ e }}</p>{% endfor %}
+        </div>
+        <div>
+          <label class="text-sm text-slate-700">Confirm password</label>
+          {{ form.password2 }}
+          {% for e in form.password2.errors %}<p class="text-rose-600 text-sm mt-1">{{ e }}</p>{% endfor %}
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary w-full">Create account</button>
+    </form>
+
+    <p class="mt-4 text-sm text-slate-600">
+      Already have an account?
+      <a href="/admin/login/?next=/" class="text-blue-700 hover:underline">Log in</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

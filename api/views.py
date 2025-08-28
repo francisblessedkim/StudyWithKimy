@@ -39,28 +39,24 @@ class PublicUserViewSet(viewsets.ReadOnlyModelViewSet):
     lookup_field = "username"
     permission_classes = [permissions.IsAuthenticated]  # profiles are visible to logged-in users
 
-# ----- Courses -----
-# class CourseViewSet(viewsets.ModelViewSet):
-#     queryset = Course.objects.select_related("teacher").all()
-#     serializer_class = CourseSerializer
-
-#     def get_permissions(self):
-#         if self.action in ["create", "update", "partial_update", "destroy"]:
-#             return [IsTeacher()]
-#         return [permissions.IsAuthenticated()]
-
-#     def perform_create(self, serializer):
-#         # Teacher creating their own course
-#         serializer.save(teacher=self.request.user)
 
 class CourseViewSet(viewsets.ModelViewSet):
     serializer_class = CourseSerializer
 
+    # def get_queryset(self):
+    #     user = self.request.user
+    #     if getattr(user, "role", None) == "teacher":
+    #         return Course.objects.filter(teacher=user).order_by("id")
+    #     return Course.objects.none()  # block access for students/others if needed
+
+    # api/views.py  (inside CourseViewSet)
     def get_queryset(self):
         user = self.request.user
         if getattr(user, "role", None) == "teacher":
             return Course.objects.filter(teacher=user).order_by("id")
-        return Course.objects.none()  # block access for students/others if needed
+        # let students see available courses via the API
+        return Course.objects.all().order_by("id")
+
 
     def get_permissions(self):
         if self.action in ["create", "update", "partial_update", "destroy"]:
@@ -91,9 +87,42 @@ class EnrollmentViewSet(mixins.CreateModelMixin,
 
 # ----- Materials -----
 
+# @extend_schema_view(
+#     create=extend_schema(
+#         request={"multipart/form-data": MaterialSerializer},  # force file upload UI
+#         responses=MaterialSerializer,
+#     )
+# )
+# class MaterialViewSet(mixins.CreateModelMixin,
+#                       mixins.ListModelMixin,
+#                       mixins.DestroyModelMixin,
+#                       viewsets.GenericViewSet):
+#     serializer_class = MaterialSerializer
+#     permission_classes = [permissions.IsAuthenticated]
+#     parser_classes = [MultiPartParser, FormParser]
+
+#     def get_queryset(self):
+#         qs = Material.objects.select_related("course", "course__teacher")
+#         user = self.request.user
+#         if getattr(user, "role", None) == "teacher":
+#             qs = qs.filter(course__teacher=user)
+#         else:
+#             qs = qs.filter(course__enrollments__student=user,
+#                            course__enrollments__status="active")
+
+#         # NEW: support ?course=<id>
+#         req = cast(Request, self.request)
+#         course_id = req.query_params.get("course")
+#         if course_id:
+#             qs = qs.filter(course_id=course_id)
+
+#         return qs.order_by("-created_at")
+
+
+# ----- Materials -----
 @extend_schema_view(
     create=extend_schema(
-        request={"multipart/form-data": MaterialSerializer},  # force file upload UI
+        request={"multipart/form-data": MaterialSerializer},  # keep this
         responses=MaterialSerializer,
     )
 )
@@ -105,17 +134,11 @@ class MaterialViewSet(mixins.CreateModelMixin,
     permission_classes = [permissions.IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
 
-    # def get_queryset(self):
-    #     qs = Material.objects.select_related("course", "course__teacher")
-    #     user = self.request.user
-    #     if getattr(user, "role", None) == "teacher":
-    #         return qs.filter(course__teacher=user)
-    #     return qs.filter(course__enrollments__student=user, course__enrollments__status="active")
-
-    # def get_permissions(self):
-    #     if self.action in ["create", "destroy"]:
-    #         return [IsTeacher()]
-    #     return super().get_permissions()
+    def get_permissions(self):
+        # Teachers only for create/destroy; anyone logged in may list their accessible materials
+        if self.action in ["create", "destroy"]:
+            return [IsTeacher()]
+        return super().get_permissions()
 
     def get_queryset(self):
         qs = Material.objects.select_related("course", "course__teacher")
@@ -126,13 +149,18 @@ class MaterialViewSet(mixins.CreateModelMixin,
             qs = qs.filter(course__enrollments__student=user,
                            course__enrollments__status="active")
 
-        # NEW: support ?course=<id>
-        req = cast(Request, self.request)
-        course_id = req.query_params.get("course")
+        course_id = self.request.query_params.get("course")
         if course_id:
             qs = qs.filter(course_id=course_id)
-
         return qs.order_by("-created_at")
+
+    def perform_create(self, serializer):
+        course = serializer.validated_data["course"]
+        # Only the owning teacher may upload
+        if getattr(self.request.user, "role", None) != "teacher" or course.teacher_id != self.request.user.id:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Only the owning teacher can upload materials for this course.")
+        serializer.save()
 
 
 

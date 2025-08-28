@@ -6,7 +6,8 @@ def home(request):
     return HttpResponse("Study With Kimy — it works!")
 
 urlpatterns = [
-    path("", home, name="home"),
+     path('signup/', views.signup, name='signup'),
+    path("", views.landing_page, name="landing_page"),
     path("u/<str:username>/", views.public_profile, name="public_profile"),
     path("dashboard/", views.dashboard, name="dashboard"),
 ]
