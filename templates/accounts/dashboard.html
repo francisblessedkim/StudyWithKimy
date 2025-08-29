@@ -68,7 +68,12 @@
         {% if user.role == "teacher" %}
           {% for c in my_courses_taught %}
             <article class="card overflow-hidden group">
-              <div class="h-24 bg-gradient-to-br from-blue-50 to-indigo-50"></div>
+              <!-- <div class="h-24 bg-gradient-to-br from-blue-50 to-indigo-50"></div> -->
+              {% if c.thumbnail %}
+                <img src="{{ c.thumbnail.url }}" alt="" class="h-24 w-full object-cover" loading="lazy">
+              {% else %}
+                <div class="h-24 w-full bg-gradient-to-br from-blue-50 to-indigo-50"></div>
+              {% endif %}
               <div class="p-5">
                 <h3 class="font-semibold group-hover:text-blue-700 transition-all">{{ c.title }}</h3>
                 <p class="mt-1 text-sm text-slate-600 line-clamp-2">{{ c.short_description|default:c.description|truncatewords:20 }}</p>
@@ -85,7 +90,12 @@
           {% for e in my_enrollments %}
             {% with c=e.course %}
             <article class="card overflow-hidden group">
-              <div class="h-24 bg-gradient-to-br from-blue-50 to-indigo-50"></div>
+              <!-- <div class="h-24 bg-gradient-to-br from-blue-50 to-indigo-50"></div> -->
+              {% if c.thumbnail %}
+                <img src="{{ c.thumbnail.url }}" alt="" class="h-24 w-full object-cover" loading="lazy">
+              {% else %}
+                <div class="h-24 w-full bg-gradient-to-br from-blue-50 to-indigo-50"></div>
+              {% endif %}
               <div class="p-5">
                 <h3 class="font-semibold group-hover:text-blue-700 transition-all">{{ c.title }}</h3>
                 <p class="mt-1 text-sm text-slate-600 line-clamp-2">{{ c.short_description|default:c.description|truncatewords:20 }}</p>
@@ -181,6 +191,28 @@
         </ul>
       </section>
 
+      <!-------Upcoming Deadlines---------->
+      <section class="card p-5">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-semibold">Upcoming deadlines</h3>
+        <span class="text-xs text-slate-500">{{ upcoming_assignments|length }}</span>
+      </div>
+      <ul class="space-y-2">
+        {% for a in upcoming_assignments %}
+          <li class="text-sm flex items-center justify-between">
+            <div class="truncate">
+              <span class="font-medium">{{ a.title }}</span>
+              <span class="text-slate-500"> — {{ a.course.title }}</span>
+            </div>
+            <span class="text-xs text-slate-500">{{ a.due_date|date:"M d, H:i" }}</span>
+          </li>
+        {% empty %}
+          <li class="text-sm text-slate-600">No upcoming deadlines.</li>
+        {% endfor %}
+      </ul>
+    </section>
+
+
       <!-- Materials (teacher and student see their list) -->
       <section class="card p-5">
         <div class="flex items-center justify-between mb-3">
@@ -211,6 +243,7 @@
               <span>@{{ u.username }}</span>
               <!-- Replace href with your chat URL if you have one -->
               <!-- <a href="/chat/{{ u.username }}/" class="btn-ghost">Message</a> -->
+               <a href="{% url 'public_profile' u.username %}" class="btn-ghost">View Profile</a>
                <a href="{% url 'chat:room' u.username %}" class="btn-ghost">Message</a>
             </li>
           {% empty %}

@@ -17,6 +17,9 @@ urlpatterns = [
     path("courses/<slug:slug>/unenrol/<str:username>/", views.teacher_remove_student, name="teacher_remove_student"),
     path("courses/<slug:slug>/block/<str:username>/",   views.teacher_block_student,   name="teacher_block_student"),
     path("courses/<slug:slug>/unblock/<str:username>/", views.teacher_unblock_student, name="teacher_unblock_student"),
+    path("courses/<slug:slug>/assignments/add/", views.assignment_create, name="assignment_add"),
+    path("courses/<slug:slug>/assignments/<int:assignment_id>/submit/",
+         views.submission_create, name="submission_add"),
 
     # keep this AFTER all specific routes
     path("courses/<slug:slug>/", views.course_detail, name="course_detail"),

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Add assignment · {{ course.title }}{% endblock %}
+{% block content %}
+<section class="max-w-xl">
+  <h1 class="text-2xl font-semibold mb-4">Add assignment</h1>
+  <form method="post" class="space-y-3">
+    {% csrf_token %}
+    <label class="block text-sm">Title</label>
+    <input class="input" type="text" name="title" required>
+    <label class="block text-sm">Description</label>
+    <textarea class="input" name="description" rows="4"></textarea>
+    <label class="block text-sm">Due date (YYYY-MM-DD HH:MM)</label>
+    <input class="input" type="datetime-local" name="due_date">
+    <div class="mt-3">
+      <button class="btn-primary" type="submit">Create</button>
+      <a class="btn-ghost" href="{% url 'course_detail' course.slug %}">Cancel</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

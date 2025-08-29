@@ -1,5 +1,5 @@
 from django import forms
-from .models import Course
+from .models import Course, Assignment,Submission
 
 class CourseForm(forms.ModelForm):
     class Meta:
@@ -11,4 +11,20 @@ class CourseForm(forms.ModelForm):
             "start_date": forms.DateInput(attrs={"class": "input", "type": "date"}),
             "end_date": forms.DateInput(attrs={"class": "input", "type": "date"}),
             "thumbnail": forms.ClearableFileInput(attrs={"class": "input"}),
+        }
+
+class AssignmentForm(forms.ModelForm):
+    class Meta:
+        model = Assignment
+        fields = ["title", "description", "due_date", "attachment"]
+        widgets = {
+            "due_date": forms.DateTimeInput(attrs={"type": "datetime-local"}),
+        }
+
+class SubmissionForm(forms.ModelForm):
+    class Meta:
+        model = Submission
+        fields = ["file", "text"]
+        widgets = {
+            "text": forms.Textarea(attrs={"rows": 4}),
         }

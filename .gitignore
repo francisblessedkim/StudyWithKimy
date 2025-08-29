@@ -6,3 +6,9 @@ __pycache__/
 staticfiles/
 media/
 .DS_Store
+venv/
+node_modules/
+staticfiles/
+media/
+__pycache__/
+*.pyc

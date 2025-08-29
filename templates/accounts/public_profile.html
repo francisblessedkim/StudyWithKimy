@@ -1,37 +1,24 @@
-<!-- {% extends "base.html" %}
-{% block title %}{{ profile.display_name|default:profile.username }} · StudyWithKimy{% endblock %}
-{% block content %}
-<h2>{{ profile.display_name|default:profile.username }}</h2>
-<p>{{ profile.bio|default:"No bio yet." }}</p>
-
-<h3>Enrolled Courses</h3>
-<ul>
-  {% for t in enrolled_titles %}
-    <li>{{ t }}</li>
-  {% empty %}<li>No enrollments yet.</li>{% endfor %}
-</ul>
-
-<h3>Status Updates</h3>
-<ul>
-  {% for s in statuses %}
-    <li><small>{{ s.created_at|date:"Y-m-d H:i" }}</small> — {{ s.text }}</li>
-  {% empty %}<li>No updates yet.</li>{% endfor %}
-</ul>
-{% endblock %} -->
 {% extends "base.html" %}
 {% block title %}@{{ profile.username }} · StudyWithKimy{% endblock %}
 {% block content %}
 <div class="mx-auto max-w-3xl space-y-6">
+  <!-- Header -->
   <header class="card p-5 flex items-center justify-between">
     <div>
-      <h1 class="text-2xl font-bold">@{{ profile.username }}</h1>
-      <p class="text-slate-600">{{ profile.get_full_name|default:profile.username }}</p>
+      <h1 class="text-2xl font-bold">{{ profile.display_name|default:profile.get_full_name|default:profile.username }}</h1>
+      <p class="text-slate-600">@{{ profile.username }} · {{ profile.role|capfirst }}</p>
+      {% if profile.bio %}
+        <p class="mt-2 text-slate-700">{{ profile.bio }}</p>
+      {% endif %}
     </div>
-    {% if profile.photo %}<img src="{{ profile.photo.url }}" class="h-16 w-16 rounded-full object-cover" alt="">{% endif %}
+    {% if profile.photo %}
+      <img src="{{ profile.photo.url }}" class="h-16 w-16 rounded-full object-cover" alt="">
+    {% endif %}
   </header>
 
+  <!-- Status updates -->
   <section class="card p-5">
-    <h2 class="font-semibold">Status updates</h2>
+    <h2 class="font-semibold">Recent updates</h2>
     <ul class="mt-3 space-y-3">
       {% for s in statuses %}
         <li class="border border-slate-200 rounded-xl p-3">
@@ -44,16 +31,26 @@
     </ul>
   </section>
 
+  <!-- Courses -->
   <section class="card p-5">
     <h2 class="font-semibold">Courses</h2>
     <ul class="mt-3 grid sm:grid-cols-2 gap-2">
-      {% for title in enrolled_titles %}
-        <li class="border border-slate-200 rounded-xl p-3">{{ title }}</li>
-      {% empty %}
-        <li class="text-slate-600">No enrollments yet.</li>
+      {% for c in courses_taught %}
+        <li class="border border-slate-200 rounded-xl p-3">
+          <span class="font-medium">{{ c.title }}</span>
+          <span class="ml-2 text-xs text-slate-500">(teaching)</span>
+        </li>
       {% endfor %}
+      {% for c in enrolled_courses %}
+        <li class="border border-slate-200 rounded-xl p-3">
+          <span class="font-medium">{{ c.title }}</span>
+          <span class="ml-2 text-xs text-slate-500">(enrolled)</span>
+        </li>
+      {% endfor %}
+      {% if not courses_taught and not enrolled_courses %}
+        <li class="text-slate-600">No courses yet.</li>
+      {% endif %}
     </ul>
   </section>
 </div>
 {% endblock %}
-

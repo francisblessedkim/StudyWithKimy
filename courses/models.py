@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.utils.text import slugify
+from django.utils import timezone
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 User = settings.AUTH_USER_MODEL
@@ -48,6 +49,7 @@ class Enrollment(models.Model):
 
     class Meta:
         unique_together = ("student", "course")
+        ordering = ("-created_at",)
 
     def __str__(self):
         return f"{self.student} → {self.course} ({self.status})"
@@ -78,3 +80,39 @@ class Feedback(models.Model):
 
     def __str__(self):
         return f"{self.course} ← {self.student} [{self.rating}]"
+    
+class Assignment(models.Model):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="assignments")
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    due_date = models.DateTimeField()
+    attachment = models.FileField(upload_to="assignments/%Y/%m/%d", blank=True, null=True)  # optional brief/spec
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+
+    def __str__(self):
+        return f"{self.title} ({self.course})"
+
+    @property
+    def is_overdue(self):
+        return timezone.now() > self.due_date
+
+
+class Submission(models.Model):
+    assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE, related_name="submissions")
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name="submissions",
+                                limit_choices_to={"role": "student"})
+    file = models.FileField(upload_to="submissions/%Y/%m/%d", blank=True, null=True)
+    text = models.TextField(blank=True)  # for text-only answers
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    grade = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    feedback = models.TextField(blank=True)
+
+    class Meta:
+        unique_together = ("assignment", "student")
+        ordering = ("-submitted_at",)
+
+    def __str__(self):
+        return f"{self.assignment} ← @{self.student.username}"

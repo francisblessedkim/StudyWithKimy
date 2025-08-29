@@ -26,6 +26,7 @@
       <nav class="hidden md:flex items-center gap-6">
         <!-- <a class="text-sm font-medium hover:text-blue-700" href="/courses/">Courses</a> -->
          <a class="text-sm font-medium hover:text-blue-700" href="{% url 'course_list' %}">Courses</a>
+         <a class="text-sm font-medium hover:text-blue-700" href="{% url 'social:feed' %}">Feed</a>
         {% if user.is_authenticated and user.role == 'teacher' %}
           <a class="text-sm font-medium hover:text-blue-700" href="{% url 'course_add' %}">
             Create course
@@ -33,6 +34,7 @@
         {% endif %}
 
         {% if user.is_authenticated %}
+          <a class="text-sm font-medium hover:text-blue-700" href="{% url 'user_directory' %}">Users</a>
           <a class="text-sm font-medium hover:text-blue-700" href="{% url 'dashboard' %}">Dashboard</a>
           <a class="text-sm font-medium hover:text-blue-700" href="/api/docs/" target="_blank">API Docs</a>
           <span class="text-sm text-slate-600">Hi, <strong>{{ user.username }}</strong></span>
@@ -58,6 +60,7 @@
     <div id="mobileMenu" class="md:hidden hidden border-t border-slate-200">
       <div class="px-4 py-3 space-y-2">
         <!-- <a class="block text-sm font-medium hover:text-blue-700" href="/courses/">Courses</a> -->
+         <a class="text-sm font-medium hover:text-blue-700" href="{% url 'social:feed' %}">Feed</a>
          <a class="text-sm font-medium hover:text-blue-700" href="{% url 'course_list' %}">Courses</a>
         {% if user.is_authenticated and user.role == 'teacher' %}
           <a class="block text-sm font-medium hover:text-blue-700" href="{% url 'course_add' %}">
@@ -65,6 +68,7 @@
           </a>
         {% endif %}
         {% if user.is_authenticated %}
+      <a class="text-sm font-medium hover:text-blue-700" href="{% url 'user_directory' %}">Users</a>
       <a class="block text-sm font-medium hover:text-blue-700" href="{% url 'dashboard' %}">Dashboard</a>
       <a class="block text-sm font-medium hover:text-blue-700" href="/api/docs/" target="_blank">API Docs</a>
       <form action="{% url 'logout' %}" method="post" class="mt-1">

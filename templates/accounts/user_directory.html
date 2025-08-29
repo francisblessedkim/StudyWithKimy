@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}User Directory · StudyWithKimy{% endblock %}
+{% block content %}
+
+<section class="mb-6">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">User Directory</h1>
+      <p class="mt-1 text-slate-600">Browse students and teachers. Search by name or username.</p>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <form method="get" class="mt-4 grid gap-3 sm:grid-cols-[minmax(220px,1fr)_160px_auto]">
+    <input class="input" type="search" name="q" value="{{ q }}" placeholder="Search name or @username">
+    <select class="input" name="role">
+      <option value="">All roles</option>
+      <option value="student" {% if role == "student" %}selected{% endif %}>Students</option>
+      <option value="teacher" {% if role == "teacher" %}selected{% endif %}>Teachers</option>
+    </select>
+    <button class="btn-primary" type="submit">Filter</button>
+  </form>
+</section>
+
+<!-- Grid -->
+<section class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+  {% for u in users %}
+    <article class="card p-5 flex flex-col min-h-[250px]">
+      <div class="flex items-center gap-4">
+        {% if u.photo %}
+          <img src="{{ u.photo.url }}" alt="" class="h-16 w-16 rounded-full object-cover ring-2 ring-white shadow-sm">
+        {% else %}
+          <!-- fallback avatar (initial) -->
+          <div class="h-16 w-16 rounded-full grid place-items-center text-white font-semibold
+                      bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600">
+            {{ u.username|first|upper }}
+          </div>
+        {% endif %}
+        <div class="min-w-0">
+          <p class="font-semibold truncate">@{{ u.username }}</p>
+          <p class="text-xs text-slate-500 truncate">
+            {{ u.get_full_name|default:"" }}
+          </p>
+          <span class="mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium
+                       bg-slate-100 text-slate-700">
+            {{ u.role|default:"student" }}
+          </span>
+        </div>
+      </div>
+
+      <!-- latest status -->
+      <div class="mt-4 flex-1">
+        {% with s=u.status_updates.all|first %}
+          {% if s %}
+            <p class="text-sm text-slate-700 line-clamp-3">{{ s.text }}</p>
+            <p class="mt-1 text-[11px] text-slate-500">{{ s.created_at|date:"M d, Y · H:i" }}</p>
+          {% else %}
+            <p class="text-sm text-slate-500">No updates yet.</p>
+          {% endif %}
+        {% endwith %}
+      </div>
+
+      <div class="mt-4 flex items-center gap-2">
+        <a href="{% url 'public_profile' u.username %}" class="btn-ghost">View Profile</a>
+        <a href="{% url 'chat:room' u.username %}" class="btn-ghost">Message</a>
+      </div>
+    </article>
+  {% empty %}
+    <div class="col-span-full card p-6 text-slate-600">No users match your search.</div>
+  {% endfor %}
+</section>
+
+{% endblock %}
